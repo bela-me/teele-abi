@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RequestStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum Tone {
+  FORMAL
+  FRIENDLY
+  SHORT
+}
+
+model SupportRequest {
+  id               String        @id @default(cuid())
+  requesterName    String        @db.VarChar(100)
+  category         String
+  description      String        @db.VarChar(2000)
+  tone             Tone          @default(FORMAL)
+  status           RequestStatus @default(NEW)
+  draftReply       String        @default("") @db.VarChar(5000)
+  // Label of the template (or generic fallback) the current draft came from.
+  draftSourceLabel String?
+  // SHA-256 of the name, category, description and tone the draft was generated from.
+  draftBasisHash   String?       @db.Char(64)
+  // Set when name, category, description or tone changed after the draft was generated.
+  draftNeedsReview Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([updatedAt])
+}
+
+model SupportTemplate {
+  id            String @id @default(cuid())
+  category      String
+  exampleIssue  String
+  templateReply String
+  // Row position in data/support_templates.csv; used as a stable tie-breaker.
+  sortOrder     Int    @default(0)
+
+  @@unique([category, exampleIssue])
+}

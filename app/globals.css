@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-blue-700 text-white hover:bg-blue-800 disabled:hover:bg-blue-700;
+  }
+  .btn-secondary {
+    @apply border border-slate-300 bg-white text-slate-800 hover:bg-slate-50;
+  }
+  .btn-danger {
+    @apply bg-red-700 text-white hover:bg-red-800;
+  }
+  .btn-danger-outline {
+    @apply border border-red-300 bg-white text-red-700 hover:bg-red-50;
+  }
+  .field {
+    @apply block min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 shadow-sm aria-invalid:border-red-500 disabled:bg-slate-100;
+  }
+}
