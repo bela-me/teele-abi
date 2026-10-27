@@ -23,8 +23,8 @@ function issueFor(category: string, description: string): string | undefined {
   return selectTemplate(category, description, templates)?.exampleIssue;
 }
 
-test("CSV fixture has the expected 10 templates", () => {
-  assert.equal(templates.length, 10);
+test("CSV fixture has the expected 14 templates", () => {
+  assert.equal(templates.length, 14);
 });
 
 test("each template is selected by its own example issue", () => {
@@ -43,6 +43,9 @@ test("distinguishes two different problems within the same category", () => {
     ["Eelnõu koostamine", "Kopeerisin teksti ja vormindus läks valeks.", "Teele eelnõu teksti kopeerimisel muutub vormindus valeks."],
     ["Kooskõlastamine", "Saatmise nupp on hall ja mitteaktiivne.", "Teele eelnõu kooskõlastamisele saatmise nupp on mitteaktiivne."],
     ["Kooskõlastamine", "Kooskõlastaja ei leia talle saadetud eelnõu üles.", "Teele kooskõlastaja ei leia talle saadetud eelnõu."],
+    ["Sisselogimine", "Millega saab sisse logida, kas Smart-ID sobib?", "Kuidas saan Teelesse sisse logida?"],
+    ["Eelnõu koostamine", "Tahan pooleli oleva eelnõu ära kustutada.", "Kas ma saan koostamisel oleva eelnõu kustutada?"],
+    ["Istungid", "Istungi helifailid ei ole mulle nähtavad.", "Miks ma ei näe linnavalitsuse istungite helifaile?"],
   ];
   for (const [category, description, expected] of cases) {
     assert.equal(issueFor(category, description), expected, description);
@@ -139,4 +142,51 @@ test("every tone keeps every template's full text, including warnings", () => {
       assert.ok(result.draft.includes(template.templateReply), `${tone}: ${template.exampleIssue}`);
     }
   }
+});
+
+// --- topic synonyms -------------------------------------------------------------
+
+const START_PROCEEDING = "Kuidas alustada menetlust?";
+
+test("Menetlused: starting and creating a proceeding select the start template, also with a typo", () => {
+  for (const description of [
+    "Kuidas alustada menetlust?",
+    "Kuidas luua menetlust?",
+    "Kuidas alustada meneltuse loomist?",
+    "kuidas alustada meneltuse loomist",
+    "Kuidas menetluse loomine käib?",
+    "Kuidas ma loon uue menetluse?",
+  ]) {
+    assert.equal(issueFor("Menetlused", description), START_PROCEEDING, description);
+  }
+});
+
+test("Menetlused: unrelated questions do not select the start template", () => {
+  for (const description of [
+    "Minu loodud menetlust ei ole nimekirjas.",
+    "Kuidas luua aruannet?",
+    "Kuidas menetlust kustutada?",
+    "Menetluse dokument ei avane.",
+    "Menetluse loomisel tekib viga.",
+    "Ma ei saa menetlust luua.",
+    "Menetluse loomine ei õnnestu.",
+    "Ei saa menetlust alustada.",
+    "Menetluse alustamisel tekib viga.",
+    "Menetluse alustamine ei õnnestu.",
+  ]) {
+    assert.equal(issueFor("Menetlused", description), undefined, description);
+  }
+});
+
+test("topic synonyms apply only in their own category", () => {
+  for (const category of ["Kooskõlastamine", "Sisselogimine", "Istungid", "Veateated"]) {
+    for (const description of ["Kuidas luua menetlust?", "kuidas alustada meneltuse loomist"]) {
+      const result = buildDraft({ requesterName: NAME, category, description, tone: "FORMAL" }, templates);
+      assert.equal(result.match, "no-match", `${category}: ${description}`);
+    }
+  }
+  assert.equal(
+    issueFor("Õigused", "Uue eelnõu loomise nupp puudub."),
+    "Teele kasutaja ei saa uut eelnõu luua, sest loomise võimalus puudub.",
+  );
 });

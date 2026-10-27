@@ -325,6 +325,7 @@ test("categories come from the repository, deduplicated in Estonian order", asyn
     "Eelnõu koostamine",
     "Istungid",
     "Kooskõlastamine",
+    "Menetlused",
     "Sisselogimine",
     "Veateated",
     "Õigused",

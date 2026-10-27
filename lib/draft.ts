@@ -19,6 +19,12 @@
  *    exampleIssue in Estonian collation order.
  * 6. No eligible template, or no templates in the category: a cautious generic
  *    draft that only asks for details and promises nothing.
+ *
+ * Topic synonyms (TOPIC_SYNONYMS) are a narrow exception to step 3: within one
+ * category, and only when the description names the topic, listed word stems
+ * count as one canonical stem. In a problem report the canonical stem and its
+ * synonyms are dropped instead, so the how-to template is not selected. They
+ * never apply in other categories.
  */
 
 export type Tone = "FORMAL" | "FRIENDLY" | "SHORT";
@@ -63,17 +69,76 @@ const STOP_WORDS = new Set([
   "tere", "tänan", "täna", "uus", "uut", "vaja", "veel", "või", "väga", "üks",
 ]);
 
+type TopicSynonym = {
+  category: string;
+  /** The description must contain a word starting with this prefix. */
+  topicPrefix: string;
+  canonical: string;
+  stems: readonly string[];
+};
+
+/**
+ * In "Menetlused", creating a proceeding is the same action as starting one:
+ * the button is "Loo menetlus". So "luua" / "loomine" count as "alustada", but
+ * only when the description mentions a proceeding ("menetlus", also with a
+ * swapped-letter typo such as "meneltus"). Past-tense "loodud" ("a proceeding
+ * I created") is deliberately not listed.
+ *
+ * Problem reports (PROBLEM_WORDS / PROBLEM_PREFIXES, e.g. "ei saa alustada",
+ * "loomisel tekib viga") are not how-to questions: in this category both
+ * "alustada" and its synonyms are then ignored, giving the generic draft.
+ */
+const TOPIC_SYNONYMS: readonly TopicSynonym[] = [
+  {
+    category: "Menetlused",
+    topicPrefix: "mene",
+    canonical: "alust",
+    stems: ["luua", "loomi", "looma", "loome", "loob", "loon"],
+  },
+];
+
+const PROBLEM_WORDS = new Set(["ei", "pole", "ega"]);
+const PROBLEM_PREFIXES = ["viga", "vea", "tõrge", "tõrke", "õnnestu", "probleem"];
+
+function isProblemReport(descriptionWords: readonly string[]): boolean {
+  return descriptionWords.some(
+    (word) => PROBLEM_WORDS.has(word) || PROBLEM_PREFIXES.some((prefix) => word.startsWith(prefix)),
+  );
+}
+
+function applyTopicSynonyms(category: string, description: string, stems: Set<string>): Set<string> {
+  const descriptionWords = allWords(description);
+  const result = new Set(stems);
+  const problemReport = isProblemReport(descriptionWords);
+  for (const rule of TOPIC_SYNONYMS) {
+    if (rule.category !== category) continue;
+    if (problemReport) {
+      for (const stem of [rule.canonical, ...rule.stems]) result.delete(stem);
+      continue;
+    }
+    if (!descriptionWords.some((word) => word.startsWith(rule.topicPrefix))) continue;
+    for (const stem of rule.stems) {
+      if (result.delete(stem)) result.add(rule.canonical);
+    }
+  }
+  return result;
+}
+
 export const GENERIC_LABEL_NO_MATCH = "Üldmustand – sobivat malli ei leitud";
 export const GENERIC_LABEL_NO_TEMPLATES = "Üldmustand – kategoorias puuduvad mallid";
 
 const SIGNATURE = "Teele kasutajatugi";
 
-function words(text: string): string[] {
+function allWords(text: string): string[] {
   return text
     .toLocaleLowerCase("et")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .split(" ")
-    .filter((word) => word.length >= MIN_WORD_LENGTH && !STOP_WORDS.has(word));
+    .filter((word) => word !== "");
+}
+
+function words(text: string): string[] {
+  return allWords(text).filter((word) => word.length >= MIN_WORD_LENGTH && !STOP_WORDS.has(word));
 }
 
 export function keywordStems(text: string, ignore: ReadonlySet<string> = new Set()): Set<string> {
@@ -107,7 +172,7 @@ export function rankTemplates(
   templates: readonly DraftTemplate[],
 ): ScoredTemplate[] {
   const categoryStems = keywordStems(category);
-  const descriptionStems = keywordStems(description, categoryStems);
+  const descriptionStems = applyTopicSynonyms(category, description, keywordStems(description, categoryStems));
 
   return templates
     .filter((template) => template.category === category)

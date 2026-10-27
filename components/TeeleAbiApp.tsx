@@ -511,7 +511,7 @@ export default function TeeleAbiApp() {
                     onChange={(event) => update("category", event.target.value)}
                     disabled={categories.phase === "loading" && categoryOptions.length === 0}
                     aria-invalid={errors.category ? true : undefined}
-                    aria-describedby={errors.category ? "error-category" : undefined}
+                    aria-describedby={`hint-category${errors.category ? " error-category" : ""}`}
                     className="field"
                   >
                     <option value="">
@@ -523,6 +523,9 @@ export default function TeeleAbiApp() {
                       </option>
                     ))}
                   </select>
+                  <p id="hint-category" className="mt-1 text-sm text-slate-600">
+                    Vali küsimuse teema. Menetluse loomise kohta vali „Menetlused”.
+                  </p>
                   {categories.phase === "error" && (
                     <div role="alert" className="mt-2 flex flex-wrap items-center gap-2 text-sm text-red-800">
                       <span>{categories.error}</span>

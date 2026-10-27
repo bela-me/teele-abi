@@ -77,7 +77,7 @@ Algmigratsioon (`prisma/migrations/20261027000000_init`) on koostatud ilma andme
 - vormi olek: salvestamata muudatused, ülekirjutamise kinnitus ning hilinenud vastuste käsitlus.
 
 **Renderis veel kontrollida:**
-- migratsiooni ja seed'i rakendumine andmebaasis `teele-abi-db` (10 malli, 6 kategooriat) ning duplikaatide puudumine pärast uut deploy'd;
+- migratsiooni ja seed'i rakendumine andmebaasis `teele-abi-db` (14 malli, 7 kategooriat) ning duplikaatide puudumine pärast uut deploy'd;
 - päringute loomine, muutmine, staatuse vahetus, kustutamine ning andmete püsimine pärast lehe uuesti laadimist ja teises seadmes;
 - kolm tooni, üldmustand, piirangud 100, 2000 ja 5000, kopeerimine ning salvestamata muudatuste hoiatused;
 - mobiilimenüü, klaviatuuriga kasutatavad dialoogid ja andmebaasivea taastamine.
