@@ -21,6 +21,9 @@ export default function RootLayout({
           Õppedemo – ära sisesta päris päringuid ega isikuandmeid.
         </div>
         {children}
+        <footer className="border-t border-slate-200 bg-white px-4 py-3 text-center text-xs text-slate-500">
+          © 2026 Teele Abi. Built with Claude Code
+        </footer>
       </body>
     </html>
   );
